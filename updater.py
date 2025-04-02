@@ -161,7 +161,11 @@ def clean_features(data):
     """Clean various features"""
     # Reduce publisher data to name.
     # In rare cases the publisher is not provided.
-    df.publisher = df.publisher.apply(lambda x: json.loads(x)["name"] if "name" in json.loads(x) else "Publisher not provided")
+    # data["publisher.name"] = data["publisher.name"].apply(
+    #     lambda x: json.loads(x)["name"]
+    #     if "name" in json.loads(x)
+    #     else "Publisher not provided"
+    # )
 
     # Reduce tags to tag names.
     data.tags = data.tags.apply(lambda x: [tag["name"] for tag in x])
@@ -268,7 +272,7 @@ def create_python_notebooks(data):
             "{{ DISTRIBUTION_COUNT }}", str(len(data.loc[idx, "distributions"]))
         )
 
-        url = f'[Direct link by {PROVIDER} for dataset]({BASELINK_DATAPORTAL}{data.loc[idx, "name"]})'
+        url = f"[Direct link by {PROVIDER} for dataset]({BASELINK_DATAPORTAL}{data.loc[idx, 'name']})"
         py_nb = py_nb.replace("{{ DATASHOP_LINK_PROVIDER }}", url)
 
         if data.loc[idx, "url"] is not None:
@@ -302,7 +306,7 @@ def create_python_notebooks(data):
 
         # Save to disk.
         with open(
-            f'{TEMP_PREFIX}{REPO_PYTHON_OUTPUT}{data.loc[idx, "id"]}.ipynb',
+            f"{TEMP_PREFIX}{REPO_PYTHON_OUTPUT}{data.loc[idx, 'id']}.ipynb",
             "w",
             encoding="utf-8",
         ) as file:
@@ -336,7 +340,7 @@ def create_rmarkdown(data):
             "{{ DISTRIBUTION_COUNT }}", str(len(data.loc[idx, "distributions"]))
         )
 
-        url = f'[Direct link by **{PROVIDER}** for dataset]({BASELINK_DATAPORTAL}{data.loc[idx, "name"]})'
+        url = f"[Direct link by **{PROVIDER}** for dataset]({BASELINK_DATAPORTAL}{data.loc[idx, 'name']})"
         rmd = rmd.replace("{{ DATASHOP_LINK_PROVIDER }}", url)
 
         if data.loc[idx, "url"] is not None:
@@ -358,7 +362,7 @@ def create_rmarkdown(data):
 
         # Save to disk.
         with open(
-            f'{TEMP_PREFIX}{REPO_RMARKDOWN_OUTPUT}{data.loc[idx, "id"]}.Rmd',
+            f"{TEMP_PREFIX}{REPO_RMARKDOWN_OUTPUT}{data.loc[idx, 'id']}.Rmd",
             "w",
             encoding="utf-8",
         ) as file:
@@ -418,7 +422,7 @@ def create_overview(data, header):
         if len(title_clean) > TITLE_MAX_CHARS:
             title_clean = title_clean[:TITLE_MAX_CHARS] + "…"
 
-        ds_link = f'{BASELINK_DATAPORTAL}{data.loc[idx, "name"]}'
+        ds_link = f"{BASELINK_DATAPORTAL}{data.loc[idx, 'name']}"
         filename = data.loc[idx, "id"]
 
         r_gh_link = f"[R GitHub]({baselink_r_gh}{filename}.Rmd)"
