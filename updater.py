@@ -80,7 +80,7 @@ REDUCED_FEATURESET = [
     "metadata_modified",
     "resources",
     "groups",
-    "publisher",
+    "publisher.name",
     "name",
     "language",
     "modified",
@@ -159,14 +159,6 @@ def filter_csv(data):
 
 def clean_features(data):
     """Clean various features"""
-    # Reduce publisher data to name.
-    # In rare cases the publisher is not provided.
-    # data["publisher.name"] = data["publisher.name"].apply(
-    #     lambda x: json.loads(x)["name"]
-    #     if "name" in json.loads(x)
-    #     else "Publisher not provided"
-    # )
-
     # Reduce tags to tag names.
     data.tags = data.tags.apply(lambda x: [tag["name"] for tag in x])
 
