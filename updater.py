@@ -56,7 +56,7 @@ SORT_TABLE_BY = f"title.{LANGUAGE}"
 
 # Select keys in metadata for dataset and distributions.
 KEYS_DATASET = [
-    "publisher",
+    "publisher.name",
     f"organization.display_name.{LANGUAGE}",
     "organization.url",
     "maintainer",
