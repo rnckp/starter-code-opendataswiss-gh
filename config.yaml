@@ -1,0 +1,102 @@
+# Configuration for updater.py
+# Open Data Swiss starter code generator
+
+provider:
+  name: "opendata.swiss"
+  link: "https://opendata.swiss/"
+  dataportal_base: "https://opendata.swiss/de/dataset/"
+  ckan_api: "https://ckan.opendata.swiss/api/3/action/current_package_list_with_resources"
+  language: "de"
+
+github:
+  account: "rnckp"
+  repo_name: "starter-code_opendataswiss"
+  branch: "main"
+  rmarkdown_output: "01_r-markdown/"
+  python_output: "02_python/"
+
+paths:
+  temp_prefix: "_work/"
+  template_folder: "_templates/"
+  templates:
+    readme: "template_md_readme.md"
+    header: "template_md_header.md"
+    python: "template_python.ipynb"
+    rmarkdown: "template_rmarkdown.Rmd"
+  metadata_folder: "_metadata_json/"
+
+api:
+  limit: 500
+  sleep_seconds: 2
+  timeout_seconds: 30
+
+display:
+  title_max_chars: 200
+  sort_by: "title"  # Will be combined with language
+
+# Metadata keys to extract for dataset info
+keys_dataset:
+  - "publisher.name"
+  - "organization.display_name"  # Language suffix added at runtime
+  - "organization.url"
+  - "maintainer"
+  - "maintainer_email"
+  - "keywords"  # Language suffix added at runtime
+  - "issued"
+  - "metadata_created"
+  - "metadata_modified"
+
+keys_distributions:
+  - "package_id"
+  - "description"
+  - "issued"
+  - "modified"
+  - "rights"
+
+# Features to keep in reduced dataset
+reduced_featureset:
+  - "maintainer"
+  - "issued"
+  - "title_for_slug"
+  - "maintainer_email"
+  - "contact_points"
+  - "id"
+  - "metadata_created"
+  - "metadata_modified"
+  - "resources"
+  - "groups"
+  - "publisher.name"
+  - "name"
+  - "language"
+  - "modified"
+  - "url"
+  - "identifier"
+  - "keywords.fr"
+  - "keywords.de"
+  - "keywords.en"
+  - "keywords.it"
+  - "display_name.fr"
+  - "display_name.de"
+  - "display_name.en"
+  - "display_name.it"
+  - "description.fr"
+  - "description.de"
+  - "description.en"
+  - "description.it"
+  - "organization.display_name.fr"
+  - "organization.display_name.de"
+  - "organization.display_name.en"
+  - "organization.display_name.it"
+  - "organization.name"
+  - "organization.title.fr"
+  - "organization.title.de"
+  - "organization.title.en"
+  - "organization.title.it"
+  - "title.fr"
+  - "title.de"
+  - "title.en"
+  - "title.it"
+  - "metadata"
+  - "contact"
+  - "distributions"
+  - "distribution_links"
