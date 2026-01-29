@@ -11,7 +11,7 @@ output: html_document
 {{ DATASHOP_LINK_PROVIDER }}<br>
 {{ DATASHOP_LINK_ORGANIZATION }}
 
-Auto generated R starter code for data set {{ DATASET_IDENTIFIER }}.
+Auto-generated R starter code for the dataset {{ DATASET_IDENTIFIER }}.
 
 ## Metadata
 
