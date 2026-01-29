@@ -4,7 +4,7 @@
 
 ## Overview
 
-This repo provides a Python script that generates starter code notebooks from a metadata JSON of open data portals. You can execute the script manually or trigger it regularly (e.g., every night) with a GitHub Action that we provide here too, and by that create code notebooks for every dataset in your data portal.
+This repo provides a Python script that generates starter code notebooks from a metadata JSON of open data portals. You can execute the script manually or trigger it regularly (e.g., every week) with a GitHub Action that we provide here too, and by that create code notebooks for every dataset in your data portal.
 
 The script also generates a README file that contains a list of all datasets and links to the corresponding notebooks that you can use as an overview for your users. You can expose this easily as a website with GitHub Pages.
 
@@ -30,8 +30,8 @@ The code works out of the box with the [metadata API opendata.swiss](https://ope
 
 - Clone this repo and commit/push it to your GitHub account.
 - Create a second repo where you want to store the results.
-- Adapt the constants in `updater.py` to your account information, repo names, etc.
-- Adapt the parsing functions in `updater.py` to your metadata API.
+- Adapt the settings in `config.yaml` to your account information, repo names, API endpoints, etc.
+- Adapt the parsing functions in `updater.py` to your metadata API if needed.
 - Adapt the workflow file (see `.github/workflows/autoupdater.yml`):
   - Set the cron pattern.
   - Set the values for `destination-github-username` (the name of your GitHub account) and `destination-repository-name` (the name of the mentioned second repo that receives the results).
@@ -44,25 +44,38 @@ The code works out of the box with the [metadata API opendata.swiss](https://ope
 - Manually trigger the GitHub Action workflow and check the results.
 - Do not forget to add a license to your second repo.
 
-## Dependencies
+## Local Development
 
-The repository contains an `environment.yml` and an `requirements.txt` file,
-which can be utilized by
-[conda](https://docs.conda.io/projects/conda/en/stable/user-guide/install/index.html)
-or pip. To use conda to install the dependencies, do the following:
+This project uses [uv](https://docs.astral.sh/uv/) for dependency management. Python 3.12+ required.
 
 ```bash
-# To create the environment:
-conda env create --file environment.yml
+# Install uv (if not already installed)
+curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# To activate the environment:
-conda activate opendataswiss
+# Install dependencies
+uv sync
 
-# To update the environment after change of the environment.yml
-conda env update --file environment.yml  --prune
+# Run the updater script
+uv run python updater.py
 
-# To delete the environment:
-conda remove --name opendataswiss --all
+# Code quality
+uv run ruff format .      # Format code
+uv run ruff check .       # Lint code
+```
+
+## Project Structure
+
+```
+├── updater.py           # Main script that generates starter code
+├── config.yaml          # Configuration (API endpoints, paths, settings)
+├── pyproject.toml       # Project dependencies (managed by uv)
+├── _templates/          # Templates for generated files
+│   ├── template_md_readme.md
+│   ├── template_md_header.md
+│   ├── template_python.ipynb
+│   └── template_rmarkdown.Rmd
+├── _work/               # Output directory (pushed to target repo)
+└── .github/workflows/   # GitHub Action for automated updates
 ```
 
 ## Good to know
