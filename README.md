@@ -12,7 +12,7 @@ The execution of the script is lightweight and takes only a couple of minutes de
 
 Your users get notebooks that are specifically tailored for every dataset. They are already set with the most recent dataset metadata and code snippets. Your users can start their analysis for your datasets right away with just a couple of clicks or even just one single click if they use Google Colab.
 
-This repo here is setup so that it generates the starter code [in this repo](https://github.com/rnckp/starter-code_opendataswiss) and creates [this overview page here](https://rnckp.github.io/starter-code_opendataswiss/).
+This repo here is set up so that it generates the starter code [in this repo](https://github.com/rnckp/starter-code_opendataswiss) and creates [this overview page here](https://rnckp.github.io/starter-code_opendataswiss/).
 
 ## How does it work?
 
@@ -49,7 +49,7 @@ The code works out of the box with the [metadata API opendata.swiss](https://ope
 The repository contains an `environment.yml` and an `requirements.txt` file,
 which can be utilized by
 [conda](https://docs.conda.io/projects/conda/en/stable/user-guide/install/index.html)
-or pip. To use conda to install the dependencies do the following:
+or pip. To use conda to install the dependencies, do the following:
 
 ```bash
 # To create the environment:
