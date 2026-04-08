@@ -20,3 +20,6 @@ updater = "updater:main"
 dev = [
     "ruff>=0.14.14",
 ]
+
+[tool.uv]
+exclude-newer = "7 days"
