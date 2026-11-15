@@ -1,22 +1,7 @@
-# Preconfigured starter code files for all CSV datasets of {{ PROVIDER }}
+{{ HEADER }}
 
-### Open any tabular dataset of {{ PROVIDER }} with one click and get a fully configured Python Jupyter Notebook or R Markdown file. 
+[Browse all resources]({{ PAGES_URL }}) or [view the resource table](index.md).
 
-### Please go to this 👉 **[overview website]({{ GITHUB_PAGE }}) with the full list of datasets and links to all code files**. 
-
-This repository currently provides 2 x {{ DATASET_COUNT }} code files (1 x R, 1 x Python) for all datasets (*«packages»*) that are available on [{{ PROVIDER }}]({{ DATA_PORTAL }}) and that contain one or more CSV distributions.
-
-- The code files are configured with relevant metadata, descriptions, data links, and some starter code. 
-- The idea of this experiment is **that you can immediately start analyzing the data with R or Python.** 
-- You can **open the Python notebooks with one click in Google Colab too.**
-
-⚠️ **Note**: 
-- **GitHub, unfortunately, doesn't render larger markdown files in full length in the repo view.** The GitHub page aka «overview website» (link above) renders the list properly. 
-- Unfortunately, you also won't be able to view all 2.k+ files in the repo folders. Again, GitHub truncates file lists longer than 1,000 files. Files beyond the limit are available but aren't listed. So either clone the repo or select individual files from the [overview website]({{ GITHUB_PAGE }}).
-
-
-Feedback is always very welcome – simply open an issue! 🙌
-
-<sub>Latest update: **{{ TODAY_DATE }}**</sub><br>
-<sub>For all data licenses, please refer to each dataset's link (provided in list as well as in the notebooks).</sub>
-
+Each resource notebook loads one file. Choose a resource from the table below.
+CSV notebooks need pandas, matplotlib, seaborn and requests (Python), or tidyverse and skimr (R).
+{{ RESOURCE_TABLE }}

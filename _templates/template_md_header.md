@@ -1,18 +1,11 @@
-# Preconfigured starter code files for all CSV datasets of {{ PROVIDER }}
+# Starter code for CSV resources on opendata.swiss
 
-### Open any tabular dataset of **{{ PROVIDER }}** with one click and **get a fully configured Python Jupyter Notebook or R Markdown file**. 
+Browse **{{ DATASET_COUNT }} datasets and {{ RESOURCE_COUNT }} resources** listed as CSV on [opendata.swiss](https://opendata.swiss/). Each notebook loads one CSV resource and includes metadata, summaries and plots.
 
-- The code files are **configured with relevant metadata, descriptions, data links, and some starter code.** 
-- The idea of this experiment is **that you can immediately start analyzing the data with R or Python.** 
-- You can **open the Python notebooks with one click in Google Colab too.**
+Open Python notebooks in Google Colab to run them in your browser, or use a local notebook environment. R Markdown files require a local R environment with tidyverse and skimr. Packages are not installed by the notebooks.
 
-⚠️ **Note**: To **download individual files from GitHub, you need to switch to the file's `RAW` view and then `Right-Click-Save-As`.** Only then will you get the proper file format rather than the HTML that GitHub yields.
+To download a source file from GitHub, open its `RAW` view and save that file. Check the inferred CSV separator and column types before analyzing the data.
 
-Feedback is always very welcome – simply open an issue.
+Feedback is welcome through issues. The generated code uses the [MIT License](LICENSE.md). Check each dataset's catalogue entry for data usage terms.
 
-👉 Here is the link to the [repository]({{ GITHUB_REPO }}) that currently contains 2 x {{ DATASET_COUNT }} code files (1 x R, 1 x Python) for all datasets (*«packages»*) that are available on [{{ PROVIDER }}]({{ DATA_PORTAL }}) and that contain one or more CSV distributions. This website is built from this repo.
-
-<sub>Latest update: **{{ TODAY_DATE }}**</sub><br>
-<sub>For all data licenses, please refer to each dataset's link (provided in the list as well as in the notebooks).</sub>
-
-
+Last generated: {{ TODAY_DATE }}

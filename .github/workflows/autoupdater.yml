@@ -1,28 +1,73 @@
 name: autoupdater
 run-name: autoupdater
 on:
+  pull_request:
   push:
+    branches: [main]
+  workflow_dispatch:
   schedule:
-    - cron:  '35 3 * * 0'  # every Sunday at 03:35
+    - cron: '35 3 * * 0' # Sundays at 03:35 UTC.
+
+permissions:
+  contents: read
+
+concurrency:
+  group: autoupdater-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
-  python_script:
+  quality:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: '0.13.8'
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version-file: '.python-version'
+      - run: uv sync --locked
+      - run: uv run --no-sync ruff format --check updater.py tests
+      - run: uv run --no-sync ruff check updater.py tests
+      - run: uv run --no-sync pytest
+
+  python_script:
+    needs: quality
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
-      - uses: actions/checkout@v6
+      - name: Check out generator
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          token: ${{ secrets.PAT }}
+          persist-credentials: false
 
-      - uses: astral-sh/setup-uv@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         with:
-          python-version: '3.13'
+          version: '0.13.8'
 
-      - run: uv sync
-      - run: uv run python updater.py
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version-file: '.python-version'
+          check-latest: true
+
+      - name: Install dependencies
+        run: uv sync --locked --no-dev
+
+      - name: Run updater
+        run: uv run --no-sync python updater.py
+
+      - name: Verify generated files before publishing
+        run: uv run --no-sync python updater.py --verify-output
 
       - name: Push generated files to target repository
-        uses: cpina/github-action-push-to-another-repository@main
+        uses: cpina/github-action-push-to-another-repository@55306faa4ed53b815ae49e564af8cfb359d32ae2 # v1.7.3
         env:
           API_TOKEN_GITHUB: ${{ secrets.PAT }}
         with:
@@ -30,5 +75,6 @@ jobs:
           destination-github-username: 'rnckp'
           destination-repository-name: 'starter-code_opendataswiss'
           target-branch: main
-          commit-message: "Updates"
-          
+          user-name: 'github-actions[bot]'
+          user-email: '41898282+github-actions[bot]@users.noreply.github.com'
+          commit-message: 'chore(data): regenerate starter notebooks from ORIGIN_COMMIT'

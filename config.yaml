@@ -23,80 +23,39 @@ paths:
     header: "template_md_header.md"
     python: "template_python.ipynb"
     rmarkdown: "template_rmarkdown.Rmd"
-  metadata_folder: "_metadata_json/"
 
 api:
   limit: 500
   sleep_seconds: 2
   timeout_seconds: 30
 
+http:
+  user_agent_generator: "OpendataSwiss-StarterCode-Generator/1.0"
+  user_agent_python: "OpendataSwiss-StarterCode-Python/1.0"
+  user_agent_r: "OpendataSwiss-StarterCode-R/1.0"
+
 display:
   title_max_chars: 200
-  sort_by: "title"  # Will be combined with language
 
 # Metadata keys to extract for dataset info
 keys_dataset:
+  - "identifier"
   - "publisher.name"
-  - "organization.display_name"  # Language suffix added at runtime
+  - "organization.display_name"
   - "organization.url"
   - "maintainer"
   - "maintainer_email"
-  - "keywords"  # Language suffix added at runtime
+  - "keywords"
   - "issued"
   - "metadata_created"
   - "metadata_modified"
 
 keys_distributions:
+  - "id"
+  - "name"
   - "package_id"
   - "description"
   - "issued"
   - "modified"
+  - "license"
   - "rights"
-
-# Features to keep in reduced dataset
-reduced_featureset:
-  - "maintainer"
-  - "issued"
-  - "title_for_slug"
-  - "maintainer_email"
-  - "contact_points"
-  - "id"
-  - "metadata_created"
-  - "metadata_modified"
-  - "resources"
-  - "groups"
-  - "publisher.name"
-  - "name"
-  - "language"
-  - "modified"
-  - "url"
-  - "identifier"
-  - "keywords.fr"
-  - "keywords.de"
-  - "keywords.en"
-  - "keywords.it"
-  - "display_name.fr"
-  - "display_name.de"
-  - "display_name.en"
-  - "display_name.it"
-  - "description.fr"
-  - "description.de"
-  - "description.en"
-  - "description.it"
-  - "organization.display_name.fr"
-  - "organization.display_name.de"
-  - "organization.display_name.en"
-  - "organization.display_name.it"
-  - "organization.name"
-  - "organization.title.fr"
-  - "organization.title.de"
-  - "organization.title.en"
-  - "organization.title.it"
-  - "title.fr"
-  - "title.de"
-  - "title.en"
-  - "title.it"
-  - "metadata"
-  - "contact"
-  - "distributions"
-  - "distribution_links"

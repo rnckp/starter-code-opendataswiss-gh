@@ -1,88 +1,74 @@
-# 🚀 Starter Code Generator for opendata.swiss
+# Starter code generator for opendata.swiss
 
-### Automatically generate Python and R starter code for the opendata.swiss platform
+Generate Python notebooks and R Markdown files for CSV resources on opendata.swiss. Each file loads one resource and provides metadata, summaries and plots to help users explore the data.
 
-## Overview
+For ready-to-use notebooks, browse [starter-code_opendataswiss](https://github.com/rnckp/starter-code_opendataswiss) or its [overview page](https://rnckp.github.io/starter-code_opendataswiss/). This repository maintains the generator.
 
-This repo provides a Python script that generates starter code notebooks from a metadata JSON of open data portals. You can execute the script manually or trigger it regularly (e.g., every week) with a GitHub Action that we provide here too, and by that create code notebooks for every dataset in your data portal.
+## Run locally
 
-The script also generates a README file that contains a list of all datasets and links to the corresponding notebooks that you can use as an overview for your users. You can expose this easily as a website with GitHub Pages.
-
-The execution of the script is lightweight and takes only a couple of minutes depending on the number of datasets in your data portal.
-
-Your users get notebooks that are specifically tailored for every dataset. They are already set with the most recent dataset metadata and code snippets. Your users can start their analysis for your datasets right away with just a couple of clicks or even just one single click if they use Google Colab.
-
-This repo here is set up so that it generates the starter code [in this repo](https://github.com/rnckp/starter-code_opendataswiss) and creates [this overview page here](https://rnckp.github.io/starter-code_opendataswiss/).
-
-## How does it work?
-
-The system works with two repos.
-
-- The **first repo** contains the code from this repo that creates the notebooks and the overview README.
-- The GitHub Action workflow included in this repo instantiates a container, installs the necessary dependencies, clones the repo, and executes the script.
-- Once the notebooks are created, the workflow will push these to a **second repo** that you can make available to your users.
-
-The script works with templates that are stored in – you guessed it – `_templates`. You can easily adapt these according to your ideas. Just make sure to keep the necessary placeholders (marked with double curly brackets) in the templates. The script will replace them with values from the metadata JSON.
-
-The code works out of the box with the [metadata API opendata.swiss](https://opendata.swiss/api/3/action/current_package_list_with_resources).
-
-## How to adapt the code to your needs?
-
-- Clone this repo and commit/push it to your GitHub account.
-- Create a second repo where you want to store the results.
-- Adapt the settings in `config.yaml` to your account information, repo names, API endpoints, etc.
-- Adapt the parsing functions in `updater.py` to your metadata API if needed.
-- Adapt the workflow file (see `.github/workflows/autoupdater.yml`):
-  - Set the cron pattern.
-  - Set the values for `destination-github-username` (the name of your GitHub account) and `destination-repository-name` (the name of the mentioned second repo that receives the results).
-- In your GitHub account go to `Settings > Developer settings > Personal access tokens > Fine-grained tokens` and create a new token by clicking `Generate new token`.
-  - Set a token name and set the expiration.
-  - Set `Repository access` to `Only select repositories`. Select both repositories and set permissions to `Read access to metadata` and `Read and Write access to code`.
-  - Copy the token.
-- In your GitHub account go to `Settings > Secrets` and create a new secret by clicking `New repository secret`.
-  - Set the name to `PAT` and paste the token you just copied. If you name your secret differently you need to adapt the workflow file accordingly.
-- Manually trigger the GitHub Action workflow and check the results.
-- Do not forget to add a license to your second repo.
-
-## Local Development
-
-This project uses [uv](https://docs.astral.sh/uv/) for dependency management. Python 3.12+ required.
+With `uv` installed, run from the repository root. Python 3.12 or newer is required; the checkout and CI use Python 3.13.
 
 ```bash
-# Install uv (if not already installed)
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# Install dependencies
-uv sync
-
-# Run the updater script
+uv sync --locked
 uv run python updater.py
-
-# Code quality
-uv run ruff format .      # Format code
-uv run ruff check .       # Lint code
+uv run python updater.py --verify-output
 ```
 
-## Project Structure
+The generator fetches CKAN catalogue metadata and selects resources listed as CSV. It writes notebooks to `_work/02_python/`, R Markdown files to `_work/01_r-markdown/`, and resource tables to `_work/README.md` and `_work/index.md`. Data is downloaded when a notebook runs. Local generation does not publish anything.
 
+The final command verifies the generated files and their checksums without downloading metadata or executing notebooks. Python notebooks can run in Colab or a local notebook environment; R Markdown files need a local R environment. Check the inferred CSV separator and column types before using the data for analysis.
+
+## Output and filenames
+
+Each CSV resource gets its own notebook and R Markdown file, named `<dataset-id>--<resource-id>`. CKAN dataset and resource IDs keep filenames stable when titles or URLs change. Resources without an ID use a hash of their download URL. Catalogue links use the dataset's CKAN name.
+
+This replaces the previous dataset-only filenames. Old direct notebook links must be updated to the resource links in the generated overview.
+
+**Generated notebook directories are rebuilt on every run.** Keep hand-written files outside them, and run only one generator per output directory at a time.
+
+Generation stages and verifies a complete release before replacing the output. It preserves files outside the notebook directories except the generated `README.md`, `index.md` and `manifest.json`. Empty or invalid catalogues and failed generation leave the previous output in place.
+
+If replacement or rollback is interrupted, a sibling `._work.previous` backup may remain. Inspect and recover it before rerunning; generation refuses to overwrite that backup. A custom output root uses `.<output-root-name>.previous`.
+
+## Customize
+
+Edit [config.yaml](config.yaml) to change the API, language, output paths, metadata fields or published repository links. Edit the files in [\_templates/](./_templates/) to change notebook and overview content, preserving their template markers.
+
+To use a different configuration:
+
+```bash
+uv run python updater.py --config path/to/config.yaml
 ```
-├── updater.py           # Main script that generates starter code
-├── config.yaml          # Configuration (API endpoints, paths, settings)
-├── pyproject.toml       # Project dependencies (managed by uv)
-├── _templates/          # Templates for generated files
-│   ├── template_md_readme.md
-│   ├── template_md_header.md
-│   ├── template_python.ipynb
-│   └── template_rmarkdown.Rmd
-├── _work/               # Output directory (pushed to target repo)
-└── .github/workflows/   # GitHub Action for automated updates
+
+The default configuration is `config.yaml` in the working directory. Relative configuration, output and template paths use the working directory, including when using `--config`. Notebook output directories are relative to the output root; template filenames are relative to the template folder.
+
+## Publish automatically
+
+[The GitHub Actions workflow](.github/workflows/autoupdater.yml) publishes from `main` on pushes, weekly, or when triggered manually. Formatting, lint, tests and output verification must pass before publication. Pull requests run quality checks without publishing.
+
+To set up publishing:
+
+1. Set the target account, repository and branch in both `config.yaml` and the workflow's publishing step. Keep its `source-directory` aligned with the configured output root.
+2. Add a `PAT` Actions secret with write access to the target repository. Use a repository dedicated to generated output and review `_work/LICENSE.md` before publishing.
+3. Enable GitHub Pages in the target repository, deploying from the target branch's root. The generated `index.md` is the entry page.
+
+## Development
+
+After `uv sync --locked`, run:
+
+```bash
+uv run ruff format updater.py tests
+uv run ruff check updater.py tests
+uv run pytest
 ```
 
-## Good to know
+Tests exercise generated Python and check generated R content. They do not execute R Markdown; validate R template changes in an R environment.
 
-- We at Team Data of the Statistical Office of the Canton Zürich use the same code and workflow [here](https://github.com/openZH/startercode-generator_openZH).
-- The wonderful people of the [OGD team Thurgau](https://ogd.tg.ch/) have created a [similar project](https://github.com/ogdtg/starter-code-ogdtg).
+## Related projects
 
-## Collaboration
+- [Original version for OGD Canton of Zurich](https://github.com/rnckp/starter-code-ktzh) (archived)
+- [Current version OGD Canton of Zurich](https://github.com/openZH/starter-code-openzh-generator)
+- [Starter Code OGD City of Zurich](https://github.com/opendatazurich/starter-code)
+- The [OGD Thurgau project](https://github.com/ogdtg/starter-code-ogdtg) provides another implementation.
 
-Your ideas and contributions are very welcome. Please open an issue or a pull request.
+Ideas and contributions are welcome through issues and pull requests.

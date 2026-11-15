@@ -11,3 +11,15 @@ markdown/.Rhistory
 _bak/update_startercode.py
 test_script.ipynb
 AGENTS.md
+
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.env
+_work/01_r-markdown/*
+_work/02_python/*
+!_work/01_r-markdown/_placeholder.txt
+!_work/02_python/_placeholder.txt
+_work/manifest.json
