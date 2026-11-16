@@ -36,7 +36,7 @@ http:
 
 display:
   title_max_chars: 200
-  readme_resource_limit: 50
+  readme_resource_limit: 250
 
 # Metadata keys to extract for dataset info
 keys_dataset:

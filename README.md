@@ -22,7 +22,7 @@ The final command verifies the generated files and their checksums without downl
 
 Each CSV resource gets its own notebook and R Markdown file, named `<dataset-id>--<resource-id>`. CKAN dataset and resource IDs keep filenames stable when titles or URLs change. Resources without an ID use a hash of their download URL. Catalogue links use the dataset's CKAN name.
 
-The README previews the first 50 resources and links to the full catalogue on GitHub Pages. Both tables put notebook links first and show dataset names in the second column, with resource labels only for datasets containing multiple CSV files. `display.readme_resource_limit` controls preview size; `display.title_max_chars` bounds labels in both tables. Full labels remain in notebooks. Resource labels use CKAN `name`, then `title`, then resource ID; labels such as “Csv” are catalogue metadata, not parsed descriptions.
+The README previews the first 50 resources and links to the full catalogue on GitHub Pages. Both tables show dataset names first and notebook links second, with resource labels only for datasets containing multiple CSV files. `display.readme_resource_limit` controls preview size; `display.title_max_chars` bounds labels in both tables. Full labels remain in notebooks. Resource labels use CKAN `name`, then `title`, then resource ID; labels such as “Csv” are catalogue metadata, not parsed descriptions.
 
 This replaces the previous dataset-only filenames. Old direct notebook links must be updated to the resource links in the generated overview.
 

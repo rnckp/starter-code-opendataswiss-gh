@@ -474,7 +474,7 @@ def create_overview(data: pd.DataFrame, config: Config) -> None:
         },
     )
     lines = [
-        "\n| Notebooks | Dataset |\n| :-- | :-- |\n",
+        "\n| Dataset | Notebooks |\n| :-- | :-- |\n",
     ]
     resource_counts = data["identifier"].value_counts()
     for row in data.to_dict("records"):
@@ -492,8 +492,8 @@ def create_overview(data: pd.DataFrame, config: Config) -> None:
         )
         catalogue = link_url(config.base_link + quote(row["catalogue_id"], safe=""))
         lines.append(
-            f"| [Colab]({colab})<br>[Python]({py})<br>[R]({r}) | "
-            f"[{title}]({catalogue}){resource_label} |\n"
+            f"| [{title}]({catalogue}){resource_label} | "
+            f"[Colab]({colab})<br>[Python]({py})<br>[R]({r}) |\n"
         )
     table = "".join(lines)
     (config.temp_prefix / "index.md").write_text(header + table)

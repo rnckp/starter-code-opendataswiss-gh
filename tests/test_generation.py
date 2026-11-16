@@ -213,11 +213,11 @@ def test_readme_uses_configured_template(
     generate(monkeypatch, config, catalogue)
     readme = (config.temp_prefix / "README.md").read_text()
     index = (config.temp_prefix / "index.md").read_text()
-    header, table = index.split("\n| Notebooks", maxsplit=1)
+    header, table = index.split("\n| Dataset", maxsplit=1)
     assert readme == (
         header
         + "\nCustom navigation: https://rnckp.github.io/starter-code_opendataswiss/\n"
-        + "\n| Notebooks"
+        + "\n| Dataset"
         + table
     )
 
@@ -249,13 +249,15 @@ def test_overviews_use_configured_header(
 
 
 @pytest.mark.parametrize("page", ["README.md", "index.md"])
-def test_overviews_put_notebook_links_first(generated_release: updater.Config, page: str) -> None:
-    """Both entry points put notebook links before dataset and resource labels."""
+def test_overviews_put_dataset_before_notebook_links(
+    generated_release: updater.Config, page: str
+) -> None:
+    """Both entry points show the dataset first and notebook links second."""
     root = generated_release.temp_prefix
     overview = (root / page).read_text()
     table = [line for line in overview.splitlines() if line.startswith("|")]
     assert table[:2] == [
-        "| Notebooks | Dataset |",
+        "| Dataset | Notebooks |",
         "| :-- | :-- |",
     ]
     manifest = json.loads((root / "manifest.json").read_text())
@@ -268,12 +270,12 @@ def test_overviews_put_notebook_links_first(generated_release: updater.Config, p
         row = next(line for line in table[2:] if f"Resource: {resource} |" in line)
         cells = [cell.strip() for cell in row.strip("|").split("|")]
         assert len(cells) == 2
-        assert cells[1] == (
+        assert cells[0] == (
             "[Title &quot;quoted&quot; &#124; &lt;script&gt;bad&lt;/script&gt;]("
             "https://opendata.swiss/de/dataset/catalogue-slug)<br>"
             f"Resource: {resource}"
         )
-        assert cells[0] == (
+        assert cells[1] == (
             f"[Colab]({colab}{quote(entry['python'])})<br>"
             f"[Python]({github}{quote(entry['python'])})<br>"
             f"[R]({github}{quote(entry['r'])})"
@@ -749,3 +751,16 @@ def test_single_resource_dataset_omits_redundant_resource_label(
         assert "Resource:" not in overview
         assert "CSV &#124; resource" not in overview
         assert "[Colab](" in overview
+
+
+def test_python_dataset_heading_has_no_redundant_bold_markers(
+    generated_release: updater.Config,
+) -> None:
+    notebook = (
+        generated_release.temp_prefix / generated_release.python_output / "123@example--one.ipynb"
+    )
+    cells = json.loads(notebook.read_text())["cells"]
+    heading = "".join(cells[1]["source"])
+    assert heading == (
+        "## Dataset\n\n# Title &quot;quoted&quot; &#124; &lt;script&gt;bad&lt;/script&gt;\n"
+    )
