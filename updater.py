@@ -71,6 +71,7 @@ class Config:
     # HTTP settings
     http_timeout: int
 
+    readme_resource_limit: int = 50
     language: str = "de"
     api_limit: int = 500
     api_sleep: float = 2
@@ -112,6 +113,7 @@ class Config:
             repo_name=data["github"]["repo_name"],
             repo_branch=data["github"]["branch"],
             title_max_chars=data["display"]["title_max_chars"],
+            readme_resource_limit=data["display"].get("readme_resource_limit", 50),
             http_timeout=data["api"]["timeout_seconds"],
             language=data["provider"]["language"],
             api_limit=data["api"]["limit"],
@@ -204,8 +206,8 @@ def validate_config(config: Config) -> None:
         raise ValueError("Invalid GitHub account")
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,99}", config.repo_name):
         raise ValueError("Invalid GitHub repository")
-    if config.http_timeout <= 0 or config.title_max_chars <= 0:
-        raise ValueError("Timeout and title length must be positive")
+    if config.http_timeout <= 0 or config.title_max_chars <= 0 or config.readme_resource_limit <= 0:
+        raise ValueError("Timeout, title length and README resource limit must be positive")
     if config.api_limit <= 0 or config.api_sleep < 0:
         raise ValueError("API limit must be positive and sleep must not be negative")
     for value in (config.user_agent_generator, config.user_agent_python, config.user_agent_r):
@@ -461,7 +463,7 @@ def github_file(config: Config, directory: Path, filename: str) -> str:
 
 
 def create_overview(data: pd.DataFrame, config: Config) -> None:
-    """Write the full resource table to README and Pages."""
+    """Write a compact README preview and the full catalogue for Pages."""
     header = (config.template_folder / config.template_header).read_text()
     header = apply_template_replacements(
         header,
@@ -472,19 +474,26 @@ def create_overview(data: pd.DataFrame, config: Config) -> None:
         },
     )
     lines = [
-        "\n| Dataset | Resource | Colab | Python | R |\n| :-- | :-- | :-- | :-- | :-- |\n",
+        "\n| Notebooks | Dataset |\n| :-- | :-- |\n",
     ]
+    resource_counts = data["identifier"].value_counts()
     for row in data.to_dict("records"):
         py = github_file(config, config.python_output, row["filename"] + ".ipynb")
         r = github_file(config, config.r_markdown_output, row["filename"] + ".Rmd")
         colab = py.replace("https://github.com/", "https://colab.research.google.com/github/", 1)
-        r_link = f"[R Markdown]({r})"
-        title = markdown(row["title"][: config.title_max_chars])
-        resource = markdown(row["resource_title"])
+        labels = [
+            markdown(value[: config.title_max_chars])
+            + ("…" if len(value) > config.title_max_chars else "")
+            for value in (row["title"], row["resource_title"])
+        ]
+        title, resource = labels
+        resource_label = (
+            f"<br>Resource: {resource}" if resource_counts[row["identifier"]] > 1 else ""
+        )
         catalogue = link_url(config.base_link + quote(row["catalogue_id"], safe=""))
         lines.append(
-            f"| [{title}]({catalogue}) | {resource} | [Colab]({colab}) | "
-            f"[Notebook]({py}) | {r_link} |\n"
+            f"| [Colab]({colab})<br>[Python]({py})<br>[R]({r}) | "
+            f"[{title}]({catalogue}){resource_label} |\n"
         )
     table = "".join(lines)
     (config.temp_prefix / "index.md").write_text(header + table)
@@ -492,7 +501,12 @@ def create_overview(data: pd.DataFrame, config: Config) -> None:
     readme = (config.template_folder / config.template_readme).read_text()
     (config.temp_prefix / "README.md").write_text(
         apply_template_replacements(
-            readme, {"HEADER": header, "PAGES_URL": pages, "RESOURCE_TABLE": table}
+            readme,
+            {
+                "HEADER": header,
+                "PAGES_URL": pages,
+                "RESOURCE_TABLE": "".join(lines[: config.readme_resource_limit + 1]),
+            },
         )
     )
 

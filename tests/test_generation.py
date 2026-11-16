@@ -213,11 +213,11 @@ def test_readme_uses_configured_template(
     generate(monkeypatch, config, catalogue)
     readme = (config.temp_prefix / "README.md").read_text()
     index = (config.temp_prefix / "index.md").read_text()
-    header, table = index.split("\n| Dataset", maxsplit=1)
+    header, table = index.split("\n| Notebooks", maxsplit=1)
     assert readme == (
         header
         + "\nCustom navigation: https://rnckp.github.io/starter-code_opendataswiss/\n"
-        + "\n| Dataset"
+        + "\n| Notebooks"
         + table
     )
 
@@ -249,16 +249,14 @@ def test_overviews_use_configured_header(
 
 
 @pytest.mark.parametrize("page", ["README.md", "index.md"])
-def test_overviews_include_all_resource_links_in_separate_columns(
-    generated_release: updater.Config, page: str
-) -> None:
-    """Both entry points expose the full table with a dedicated Colab column."""
+def test_overviews_put_notebook_links_first(generated_release: updater.Config, page: str) -> None:
+    """Both entry points put notebook links before dataset and resource labels."""
     root = generated_release.temp_prefix
     overview = (root / page).read_text()
     table = [line for line in overview.splitlines() if line.startswith("|")]
     assert table[:2] == [
-        "| Dataset | Resource | Colab | Python | R |",
-        "| :-- | :-- | :-- | :-- | :-- |",
+        "| Notebooks | Dataset |",
+        "| :-- | :-- |",
     ]
     manifest = json.loads((root / "manifest.json").read_text())
     assert len(table[2:]) == len(manifest["resource_files"]) == 2
@@ -267,16 +265,19 @@ def test_overviews_include_all_resource_links_in_separate_columns(
     resources = {"one": "CSV &#124; resource", "two": "Second CSV resource"}
     for entry in manifest["resource_files"]:
         resource = resources[entry["resource_id"]]
-        row = next(line for line in table[2:] if f"| {resource} |" in line)
+        row = next(line for line in table[2:] if f"Resource: {resource} |" in line)
         cells = [cell.strip() for cell in row.strip("|").split("|")]
-        assert len(cells) == 5
-        assert cells[0] == (
+        assert len(cells) == 2
+        assert cells[1] == (
             "[Title &quot;quoted&quot; &#124; &lt;script&gt;bad&lt;/script&gt;]("
-            "https://opendata.swiss/de/dataset/catalogue-slug)"
+            "https://opendata.swiss/de/dataset/catalogue-slug)<br>"
+            f"Resource: {resource}"
         )
-        assert cells[2] == f"[Colab]({colab}{quote(entry['python'])})"
-        assert cells[3] == f"[Notebook]({github}{quote(entry['python'])})"
-        assert cells[4] == f"[R Markdown]({github}{quote(entry['r'])})"
+        assert cells[0] == (
+            f"[Colab]({colab}{quote(entry['python'])})<br>"
+            f"[Python]({github}{quote(entry['python'])})<br>"
+            f"[R]({github}{quote(entry['r'])})"
+        )
 
 
 def test_resource_outputs_are_safe_complete_and_individually_loadable(
@@ -715,3 +716,36 @@ def test_unsafe_output_configuration_fails_before_fetch_or_write(
     with pytest.raises(ValueError, match="Output subdirectories|Template filenames|API limit"):
         updater.run_update(replace(config, **changes))
     assert_release_preserved(config, before)
+
+
+def test_readme_preview_keeps_full_catalogue_on_pages(
+    config: updater.Config, catalogue: pd.DataFrame, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    config = replace(config, readme_resource_limit=1)
+    catalogue.at[0, "resources"][0]["name"] = "x" * 1000
+    generate(monkeypatch, config, catalogue)
+    for page, expected_rows in (("README.md", 3), ("index.md", 4)):
+        overview = (config.temp_prefix / page).read_text()
+        assert (
+            len([line for line in overview.splitlines() if line.startswith("|")]) == expected_rows
+        )
+        assert "x" * config.title_max_chars + "…" in overview
+        assert "x" * (config.title_max_chars + 1) not in overview
+    readme = (config.temp_prefix / "README.md").read_text()
+    assert "[Browse all resources](https://rnckp.github.io/starter-code_opendataswiss/)" in readme
+    assert "index.md" not in readme
+    assert "preview" in readme.lower()
+    notebook = config.temp_prefix / config.python_output / "123@example--one.ipynb"
+    assert "x" * 1000 in notebook.read_text()
+
+
+def test_single_resource_dataset_omits_redundant_resource_label(
+    config: updater.Config, catalogue: pd.DataFrame, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    catalogue.at[0, "resources"] = catalogue.at[0, "resources"][:1]
+    generate(monkeypatch, config, catalogue)
+    for page in ("README.md", "index.md"):
+        overview = (config.temp_prefix / page).read_text()
+        assert "Resource:" not in overview
+        assert "CSV &#124; resource" not in overview
+        assert "[Colab](" in overview
