@@ -105,6 +105,40 @@ for filename, error in failures:
     run_notebook_code(tmp_path, code)
 
 
+def test_csv_loader_reads_gzip_files_over_http(tmp_path: Path) -> None:
+    """A gzip CSV file must load over HTTP just as it does from a local path."""
+    root = Path(__file__).resolve().parents[1]
+    notebook = json.loads((root / "_templates/template_python.ipynb").read_text())
+    helper = next("".join(c["source"]) for c in notebook["cells"] if c.get("id") == "csv-reader")
+    code = (
+        "import gzip\nfrom io import BytesIO\nfrom pathlib import Path\n"
+        "from unittest.mock import patch\nimport pandas as pd\nimport pytest\n"
+        + helper
+        + """
+contents = gzip.compress(b"label,value\\nfirst,1\\nsecond,2\\n")
+Path("data.csv.gz").write_bytes(contents)
+expected = {"label": ["first", "second"], "value": [1, 2]}
+assert get_dataset("data.csv.gz").to_dict("list") == expected
+for options in ({}, {"compression": "infer"}, {"compression": "gzip"},
+                {"compression": {"method": "gzip"}}):
+    response = requests.Response()
+    response.status_code = 200
+    response.raw = BytesIO(contents)
+    with patch("requests.get", return_value=response):
+        data = get_dataset("https://example.invalid/data.csv.gz", **options)
+        assert data.to_dict("list") == expected
+    assert response.raw.closed
+response = requests.Response()
+response.status_code = 200
+response.raw = BytesIO(contents)
+with patch("requests.get", return_value=response), pytest.raises(UnicodeDecodeError):
+    get_dataset("https://example.invalid/data.csv.gz", compression=None)
+assert response.raw.closed
+"""
+    )
+    run_notebook_code(tmp_path, code)
+
+
 @pytest.mark.parametrize("separator", [None, ","], ids=["inferred", "explicit"])
 @pytest.mark.parametrize(
     "contents",

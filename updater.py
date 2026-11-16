@@ -391,7 +391,9 @@ def replacements_for(row: dict[str, Any], config: Config) -> dict[str, str]:
 
 def create_python_notebooks(data: pd.DataFrame, config: Config) -> None:
     """Render parsed JSON cells, escaping code literals separately from Markdown."""
-    template = json.loads((config.template_folder / config.template_python).read_text())
+    template = json.loads(
+        (config.template_folder / config.template_python).read_text(encoding="utf-8")
+    )
     output = config.temp_prefix / config.python_output
     output.mkdir(parents=True, exist_ok=True)
     for row in data.to_dict("records"):
@@ -422,13 +424,13 @@ def create_python_notebooks(data: pd.DataFrame, config: Config) -> None:
         if markers != 1:
             raise ValueError("Python template must contain exactly one distribution marker")
         (output / f"{row['filename']}.ipynb").write_text(
-            json.dumps(notebook, ensure_ascii=False, indent=2) + "\n"
+            json.dumps(notebook, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
         )
 
 
 def create_rmarkdown(data: pd.DataFrame, config: Config) -> None:
     """Render R Markdown using escaped text and quoted R string literals."""
-    template = (config.template_folder / config.template_rmarkdown).read_text()
+    template = (config.template_folder / config.template_rmarkdown).read_text(encoding="utf-8")
     if TEMPLATE_MARKER.findall(template).count("DISTRIBUTIONS") != 1:
         raise ValueError("R template must contain exactly one distribution marker")
     output = config.temp_prefix / config.r_markdown_output
@@ -445,7 +447,7 @@ def create_rmarkdown(data: pd.DataFrame, config: Config) -> None:
             }
         )
         (output / f"{row['filename']}.Rmd").write_text(
-            apply_template_replacements(template, values)
+            apply_template_replacements(template, values), encoding="utf-8"
         )
 
 
@@ -464,7 +466,7 @@ def github_file(config: Config, directory: Path, filename: str) -> str:
 
 def create_overview(data: pd.DataFrame, config: Config) -> None:
     """Write a compact README preview and the full catalogue for Pages."""
-    header = (config.template_folder / config.template_header).read_text()
+    header = (config.template_folder / config.template_header).read_text(encoding="utf-8")
     header = apply_template_replacements(
         header,
         {
@@ -496,9 +498,9 @@ def create_overview(data: pd.DataFrame, config: Config) -> None:
             f"[Colab]({colab})<br>[Python]({py})<br>[R]({r}) |\n"
         )
     table = "".join(lines)
-    (config.temp_prefix / "index.md").write_text(header + table)
+    (config.temp_prefix / "index.md").write_text(header + table, encoding="utf-8")
     pages = f"https://{config.github_account}.github.io/{quote(config.repo_name, safe='')}/"
-    readme = (config.template_folder / config.template_readme).read_text()
+    readme = (config.template_folder / config.template_readme).read_text(encoding="utf-8")
     (config.temp_prefix / "README.md").write_text(
         apply_template_replacements(
             readme,
@@ -507,7 +509,8 @@ def create_overview(data: pd.DataFrame, config: Config) -> None:
                 "PAGES_URL": pages,
                 "RESOURCE_TABLE": "".join(lines[: config.readme_resource_limit + 1]),
             },
-        )
+        ),
+        encoding="utf-8",
     )
 
 
@@ -538,7 +541,9 @@ def write_manifest(data: pd.DataFrame, config: Config) -> None:
             for name in names
         },
     }
-    (config.temp_prefix / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+    (config.temp_prefix / "manifest.json").write_text(
+        json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
+    )
 
 
 def verify_output(config: Config) -> None:
@@ -556,7 +561,7 @@ def verify_output(config: Config) -> None:
     root = config.temp_prefix
     if any(p.is_symlink() for p in root.rglob("*")):
         raise ValueError("Output must not contain symbolic links")
-    manifest = json.loads((root / "manifest.json").read_text())
+    manifest = json.loads((root / "manifest.json").read_text(encoding="utf-8"))
     files = manifest["files"]
     if manifest["version"] != 1 or manifest["resources"] < 1 or manifest["datasets"] < 1:
         raise ValueError("Invalid output manifest")
@@ -594,7 +599,7 @@ def verify_output(config: Config) -> None:
         ):
             raise ValueError("Output integrity check failed")
         if path.suffix == ".ipynb":
-            notebook = json.loads((root / path).read_text())
+            notebook = json.loads((root / path).read_text(encoding="utf-8"))
             for cell in notebook["cells"]:
                 if cell["cell_type"] == "code":
                     ast.parse("".join(cell["source"]))

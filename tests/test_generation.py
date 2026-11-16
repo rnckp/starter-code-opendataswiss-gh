@@ -539,10 +539,12 @@ def test_resource_filenames_stable_when_reordered(
     assert before == after
 
 
-def test_release_swap_failure_restores_previous_output(
+@pytest.mark.parametrize("fail_target", ["backup", "output"])
+def test_release_swap_failure_preserves_previous_output(
     config: updater.Config,
     catalogue: pd.DataFrame,
     monkeypatch: pytest.MonkeyPatch,
+    fail_target: str,
 ) -> None:
     generate(monkeypatch, config, catalogue)
     before = release_files(config.temp_prefix)
@@ -550,7 +552,8 @@ def test_release_swap_failure_restores_previous_output(
     original_rename = Path.rename
 
     def failing_rename(path: Path, target: Path) -> Path:
-        if target == config.temp_prefix.absolute() and path != backup:
+        destination = backup if fail_target == "backup" else config.temp_prefix.absolute()
+        if target == destination and path != backup:
             raise OSError("simulated replacement failure")
         return original_rename(path, target)
 
@@ -689,6 +692,8 @@ def test_resource_identity_tracks_ids_and_unidentified_urls(
         {"python_output": Path("nested/output")},
         {"python_output": Path("same"), "r_markdown_output": Path("same")},
         {"template_python": "../outside.ipynb"},
+        {"temp_prefix": Path(".")},
+        {"temp_prefix": Path.cwd().parent},
         {"api_limit": 0},
         {"api_sleep": -1},
     ],
@@ -698,6 +703,8 @@ def test_resource_identity_tracks_ids_and_unidentified_urls(
         "nested-directory",
         "shared-directory",
         "template-traversal",
+        "working-directory-root",
+        "ancestor-directory-root",
         "invalid-api-limit",
         "invalid-api-sleep",
     ],
@@ -715,8 +722,31 @@ def test_unsafe_output_configuration_fails_before_fetch_or_write(
         pytest.fail("Invalid paths must be rejected before fetching metadata")
 
     monkeypatch.setattr(updater, "get_full_package_list", unexpected_fetch)
-    with pytest.raises(ValueError, match="Output subdirectories|Template filenames|API limit"):
+    with pytest.raises(
+        ValueError, match="Output subdirectories|Template filenames|Unsafe output root|API limit"
+    ):
         updater.run_update(replace(config, **changes))
+    assert_release_preserved(config, before)
+
+
+def test_symlink_output_root_is_rejected_before_fetch_or_write(
+    generated_release: updater.Config,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """An output-root link must not let generation replace its target release."""
+    config = generated_release
+    before = release_files(config.temp_prefix)
+    link = tmp_path / "linked-output"
+    link.symlink_to(config.temp_prefix, target_is_directory=True)
+
+    def unexpected_fetch(_: updater.Config) -> None:
+        pytest.fail("A symlink output root must be rejected before fetching metadata")
+
+    monkeypatch.setattr(updater, "get_full_package_list", unexpected_fetch)
+    with pytest.raises(ValueError, match="Unsafe output root"):
+        updater.run_update(replace(config, temp_prefix=link))
+    assert link.is_symlink()
     assert_release_preserved(config, before)
 
 

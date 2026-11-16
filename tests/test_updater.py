@@ -1,6 +1,7 @@
 """CKAN metadata and command-line regression tests."""
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -42,6 +43,46 @@ def test_missing_default_config_raises(tmp_path: Path, monkeypatch: pytest.Monke
     monkeypatch.chdir(tmp_path)
     with pytest.raises(FileNotFoundError):
         updater.Config.from_yaml()
+
+
+def test_generation_and_verification_use_utf8_in_non_utf8_locale(
+    tmp_path: Path, catalogue: pd.DataFrame
+) -> None:
+    """Locale encoding must not affect template text or published Unicode metadata."""
+    catalogue.at[0, "title"] = {"de": "Grüsse aus Zürich 東京"}
+    code = """
+import json
+import locale
+import sys
+from dataclasses import replace
+from pathlib import Path
+from unittest.mock import patch
+
+import pandas as pd
+import updater
+
+assert locale.getencoding().lower().replace("-", "") != "utf8"
+rows = json.load(sys.stdin)
+config = replace(updater.Config.from_yaml(), temp_prefix=Path(sys.argv[1]))
+with patch("updater.get_full_package_list", return_value=pd.DataFrame(rows)):
+    updater.run_update(config)
+updater.verify_output(config)
+manifest = json.loads((config.temp_prefix / "manifest.json").read_text(encoding="utf-8"))
+for name in manifest["files"]:
+    text = (config.temp_prefix / name).read_text(encoding="utf-8")
+    assert rows[0]["title"]["de"] in text, name
+"""
+    result = subprocess.run(
+        [sys.executable, "-c", code, str(tmp_path / "output")],
+        cwd=Path(__file__).resolve().parents[1],
+        env={**os.environ, "LC_ALL": "C", "PYTHONUTF8": "0", "PYTHONCOERCECLOCALE": "0"},
+        input=catalogue.to_json(orient="records", force_ascii=True),
+        capture_output=True,
+        text=True,
+        timeout=15,
+        check=False,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
 
 
 @pytest.mark.parametrize("title", [{"it": "Solo italiano"}, "Plain title"])

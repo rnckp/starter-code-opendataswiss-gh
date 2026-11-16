@@ -135,7 +135,7 @@ def test_generator_and_notebook_send_configured_user_agents(
                 ).encode()
             else:
                 body = {
-                    "/selected": payload,
+                    "/selected.csv.gz": payload,
                     "/broken": b"a,b\n1,2\n3,4,5\n",
                     "/missing": b"a,b\n1,2\n",
                 }[path.path]
@@ -158,7 +158,7 @@ def test_generator_and_notebook_send_configured_user_agents(
                 "name": "catalogue-slug",
                 "title": {"de": "Example"},
                 "resources": [
-                    {"id": "1", "format": "CSV", "download_url": base + "/selected"},
+                    {"id": "1", "format": "CSV", "download_url": base + "/selected.csv.gz"},
                     {"id": "2", "format": "CSV", "url": base + "/other"},
                 ],
             }
@@ -221,7 +221,7 @@ with patch('requests.get', side_effect=tracked_get):
             assert requests_seen == [
                 ("/catalogue", "Generator-Test/1"),
                 ("/catalogue", "Generator-Test/1"),
-                ("/selected", "Notebook-Test/1"),
+                ("/selected.csv.gz", "Notebook-Test/1"),
                 ("/missing", "Notebook-Test/1"),
                 ("/broken", "Notebook-Test/1"),
             ]

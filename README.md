@@ -6,7 +6,7 @@ For ready-to-use notebooks, browse [starter-code_opendataswiss](https://github.c
 
 ## Run locally
 
-With `uv` installed, run from the repository root. Python 3.12 or newer is required; the checkout and CI use Python 3.13.
+With `uv` installed, run from the repository root. Python 3.12–3.14 is supported; the checkout and CI use Python 3.14.
 
 ```bash
 uv sync --locked
@@ -22,7 +22,7 @@ The final command verifies the generated files and their checksums without downl
 
 Each CSV resource gets its own notebook and R Markdown file, named `<dataset-id>--<resource-id>`. CKAN dataset and resource IDs keep filenames stable when titles or URLs change. Resources without an ID use a hash of their download URL. Catalogue links use the dataset's CKAN name.
 
-The README previews the first 50 resources and links to the full catalogue on GitHub Pages. Both tables show dataset names first and notebook links second, with resource labels only for datasets containing multiple CSV files. `display.readme_resource_limit` controls preview size; `display.title_max_chars` bounds labels in both tables. Full labels remain in notebooks. Resource labels use CKAN `name`, then `title`, then resource ID; labels such as “Csv” are catalogue metadata, not parsed descriptions.
+The README previews the first 250 resources with the supplied configuration and links to the full catalogue on GitHub Pages. Both tables show dataset names first and notebook links second, with resource labels only for datasets containing multiple CSV files. `display.readme_resource_limit` controls preview size; `display.title_max_chars` bounds labels in both tables. Full labels remain in notebooks. Resource labels use CKAN `name`, then `title`, then resource ID; labels such as “Csv” are catalogue metadata, not parsed descriptions.
 
 This replaces the previous dataset-only filenames. Old direct notebook links must be updated to the resource links in the generated overview.
 
@@ -51,7 +51,7 @@ The default configuration is `config.yaml` in the working directory. Relative co
 To set up publishing:
 
 1. Set the target account, repository and branch in both `config.yaml` and the workflow's publishing step. Keep its `source-directory` aligned with the configured output root.
-2. Add a `PAT` Actions secret with write access to the target repository. Use a repository dedicated to generated output and review `_work/LICENSE.md` before publishing.
+2. Add a `PAT` Actions secret with write access to the target repository. Use a repository dedicated to generated output and review `_work/LICENSE.md` before publishing. If using a new output root, copy this license there as `LICENSE.md`; generation preserves static files but does not create the license.
 3. Enable GitHub Pages in the target repository, deploying from the target branch's root. The generated `index.md` is the entry page.
 
 ## Development
